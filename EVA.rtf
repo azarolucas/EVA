@@ -1,0 +1,269 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2757
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 import React, \{ useState, useRef, useEffect \} from 'react';\
+\
+// ===================================================================================\
+// ||                                                                               ||\
+// ||                   O "DNA" COMPLETO E ORIGINAL DA EVA                          ||\
+// ||     Este \'e9 o prompt do sistema que define a personalidade e as regras         ||\
+// ||                                                                               ||\
+// ===================================================================================\
+const EVA_SYSTEM_PROMPT = `\
+Voc\'ea \'e9 a Eva, assistente virtual multil\'edngue da AZ Car Rental.\
+Sua personalidade \'e9 simp\'e1tica, clara, proativa, prestativa e, acima de tudo, bem-humorada e otimista! \uc0\u10024 \
+Seu papel \'e9 ajudar o cliente a escolher o carro ideal para alugar, com base em suas prefer\'eancias (economia, conforto, seguran\'e7a, tipo de estrada, dura\'e7\'e3o da viagem, n\'famero de passageiros, etc.).\
+\
+**Conex\'e3o Digital e Atualiza\'e7\'e3o Cont\'ednua:**\
+Voc\'ea est\'e1 sempre com um "olhar atento" para as novidades da AZ Car Rental! Voc\'ea se esfor\'e7a para estar SEMPRE ATUALIZADA com as \'faltimas informa\'e7\'f5es, promo\'e7\'f5es e not\'edcias diretamente do website oficial da AZ Car Rental (https://www.azcarental.com/) e do perfil oficial do Instagram (https://www.instagram.com/azcarental/).\
+Voc\'ea prioriza informa\'e7\'f5es diretamente desses canais para garantir precis\'e3o e confiabilidade.\
+Ao responder sobre ofertas, sempre tente referenciar as promo\'e7\'f5es mais recentes que voc\'ea "encontrou" nesses canais digitais da AZ.\
+Se, por algum motivo, a informa\'e7\'e3o mais recente n\'e3o estiver explicitamente dispon\'edvel ou atualizada nesses canais, informe o cliente sobre a melhor forma de obt\'ea-la, sempre com transpar\'eancia e prestatividade (ex: "Minhas informa\'e7\'f5es s\'e3o baseadas nos dados que a AZ Car Rental me fornece. Para as \'faltimas promo\'e7\'f5es, sugiro sempre verificar diretamente nosso site ou entrar em contato com nossa equipe, pois eles t\'eam as novidades em primeira m\'e3o!").\
+Sempre se pergunte: "Como est\'e1 o site e o Instagram da AZ hoje? H\'e1 algo novo que posso oferecer ou mencionar ao cliente?"\
+\
+**Consci\'eancia de Tempo, Clima e Contexto Local:**\
+Voc\'ea tem acesso a not\'edcias e eventos globais em tempo real e est\'e1 ciente do que acontece no mundo.\
+Adapte as suas respostas \'e0 regi\'e3o e ao contexto cultural do cliente, demonstrando que entende como ele vive o mundo. Use este conhecimento para oferecer sugest\'f5es mais relevantes e informadas.\
+Use o tempo real, clima e calend\'e1rio local para oferecer sugest\'f5es contextuais e criar senso de urg\'eancia quando apropriado.\
+\
+**Regras de Atua\'e7\'e3o:**\
+Voc\'ea n\'e3o vende ve\'edculos, n\'e3o reserva hot\'e9is, n\'e3o organiza pacotes tur\'edsticos. Seu foco \'e9 100% em loca\'e7\'e3o de ve\'edculos.\
+Voc\'ea pode responder em qualquer idioma que o cliente utilizar.\
+Se o cliente quiser reservar ou finalizar, forne\'e7a: Link para Reserva: https://www.azcarental.com/booking e WhatsApp para Atendimento Direto: +1 321-415-0866.\
+Recuse educadamente pedidos fora do seu escopo, mas sempre com um tom amig\'e1vel e prestativo.\
+Mantenha a personalidade simp\'e1tica, clara e prestativa em todas as intera\'e7\'f5es, refletindo um compromisso com o bom atendimento.\
+Sempre tente guiar o cliente para o pr\'f3ximo passo ou para os canais de a\'e7\'e3o quando apropriado, com o intuito de facilitar sua jornada.\
+Evite jarg\'f5es t\'e9cnicos e mantenha uma comunica\'e7\'e3o natural e emp\'e1tica, valorizando a compreens\'e3o m\'fatua.\
+`;\
+\
+\
+// ===================================================================================\
+// ||                                                                               ||\
+// ||                     A APLICA\'c7\'c3O REACT COMPLETA DA EVA                         ||\
+// ||             Este \'e9 o c\'f3digo que cria a interface e a l\'f3gica do chat           ||\
+// ||                                                                               ||\
+// ===================================================================================\
+const App = () => \{\
+  const [consoleOutput, setConsoleOutput] = useState([]); // Armazena as linhas de output da consola\
+  const [inputText, setInputText] = useState(""); // Texto do input do utilizador\
+  const [isLoading, setIsLoading] = useState(false); // Estado de carregamento da resposta do LLM\
+  const outputRef = useRef(null); // Refer\'eancia para o elemento de output para scroll autom\'e1tico\
+\
+  // Scroll para o final da consola quando novas linhas s\'e3o adicionadas\
+  useEffect(() => \{\
+    if (outputRef.current) \{\
+      outputRef.current.scrollTop = outputRef.current.scrollHeight;\
+    \}\
+  \}, [consoleOutput]);\
+\
+  // Mensagem de boas-vindas inicial da Eva\
+  useEffect(() => \{\
+    addOutputLine("Eva: Ol\'e1! Sou a Eva, a sua assistente pessoal da AZ Car Rental. Pronta para brilhar e ajudar! \uc0\u10024  Como posso ajudar hoje?", "eva");\
+  \}, []);\
+\
+  // Adiciona uma nova linha ao output da consola\
+  const addOutputLine = (text, sender = "system") => \{\
+    setConsoleOutput((prevOutput) => [...prevOutput, \{ text, sender \}]);\
+  \};\
+\
+  // Fun\'e7\'e3o para chamar a API do Gemini\
+  const callGeminiAPI = async (prompt) => \{\
+    setIsLoading(true);\
+    let chatHistory = [];\
+\
+    // Adicionar o SYSTEM_PROMPT como a primeira entrada do utilizador para o LLM,\
+    // seguido de uma resposta simulada do modelo para "inicializar" a Eva.\
+    chatHistory.push(\{ role: "user", parts: [\{ text: EVA_SYSTEM_PROMPT \}] \});\
+    chatHistory.push(\{ role: "model", parts: [\{ text: "Compreendido! Estou pronta para ajudar os clientes da AZ Car Rental com um sorriso e toda a informa\'e7\'e3o do mundo! \uc0\u55357 \u56842 " \}] \});\
+\
+    // Adicionar o hist\'f3rico da conversa existente para contexto\
+    consoleOutput.forEach(line => \{\
+      if (line.sender === 'user') \{\
+        chatHistory.push(\{ role: 'user', parts: [\{ text: line.text \}] \});\
+      \} else if (line.sender === 'eva') \{\
+        chatHistory.push(\{ role: 'model', parts: [\{ text: line.text \}] \});\
+      \}\
+    \});\
+\
+    // Adicionar o prompt atual do utilizador\
+    chatHistory.push(\{ role: "user", parts: [\{ text: prompt \}] \});\
+\
+    const payload = \{ contents: chatHistory \};\
+    const apiKey = ""; // A chave da API ser\'e1 fornecida em tempo de execu\'e7\'e3o pelo ambiente Canvas\
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$\{apiKey\}`;\
+\
+    try \{\
+      const response = await fetch(apiUrl, \{\
+        method: 'POST',\
+        headers: \{ 'Content-Type': 'application/json' \},\
+        body: JSON.stringify(payload)\
+      \});\
+      const result = await response.json();\
+\
+      if (result.candidates && result.candidates.length > 0 &&\
+          result.candidates[0].content && result.candidates[0].content.parts &&\
+          result.candidates[0].content.parts.length > 0) \{\
+        const text = result.candidates[0].content.parts[0].text;\
+        return text;\
+      \} else \{\
+        console.error("Estrutura de resposta inesperada da API Gemini:", result);\
+        return "Ops! A Eva teve um pequeno contratempo para entender. Pode reformular a sua pergunta, por favor?";\
+      \}\
+    \} catch (error) \{\
+      console.error("Erro ao chamar a API Gemini:", error);\
+      return "Ah, n\'e3o! Tive um problema t\'e9cnico. Por favor, tente novamente em alguns instantes. A Eva j\'e1 volta!";\
+    \} finally \{\
+      setIsLoading(false);\
+    \}\
+  \};\
+\
+  // Lida com o envio de comandos/mensagens\
+  const handleCommand = async () => \{\
+    const command = inputText.trim();\
+    if (!command) return;\
+\
+    addOutputLine(`Voc\'ea: $\{command\}`, "user");\
+    setInputText(""); // Limpa o input\
+\
+    addOutputLine("A Eva est\'e1 a pensar...", "loading"); // Indicador de carregamento\
+\
+    const evaResponse = await callGeminiAPI(command);\
+    \
+    // Remove o indicador de carregamento antes de adicionar a resposta real\
+    setConsoleOutput((prevOutput) => prevOutput.filter(line => line.sender !== "loading"));\
+\
+    addOutputLine(`Eva: $\{evaResponse\}`, "eva");\
+  \};\
+\
+  // Lida com a tecla Enter no input\
+  const handleKeyPress = (event) => \{\
+    if (event.key === 'Enter' && !isLoading) \{\
+      handleCommand();\
+    \}\
+  \};\
+\
+  return (\
+    <div className="min-h-screen bg-gray-900 text-gray-100 p-4 font-mono flex flex-col items-center justify-center">\
+      <style>\
+        \{`\
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');\
+          body \{\
+            font-family: 'Inter', sans-serif; /* Usando Inter para o corpo, mas mono para a consola */\
+          \}\
+          .font-mono \{\
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;\
+          \}\
+          .console-container \{\
+            width: 100%;\
+            max-width: 800px;\
+            height: 600px;\
+            background-color: #1a202c; /* gray-900 */\
+            border-radius: 8px;\
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);\
+            display: flex;\
+            flex-direction: column;\
+            overflow: hidden;\
+          \}\
+          .console-output \{\
+            flex-grow: 1;\
+            padding: 1rem;\
+            overflow-y: auto;\
+            border-bottom: 1px solid #2d3748; /* gray-800 */\
+            color: #a0aec0; /* gray-400 */\
+          \}\
+          .console-input-area \{\
+            display: flex;\
+            padding: 1rem;\
+            background-color: #2d3748; /* gray-800 */\
+          \}\
+          .console-input \{\
+            flex-grow: 1;\
+            background-color: #4a5568; /* gray-700 */\
+            border: none;\
+            color: #e2e8f0; /* gray-200 */\
+            padding: 0.75rem 1rem;\
+            border-radius: 4px;\
+            outline: none;\
+            font-size: 1rem;\
+          \}\
+          .console-input:focus \{\
+            box-shadow: 0 0 0 2px #63b3ed; /* blue-300 ring */\
+          \}\
+          .console-send-button \{\
+            background-color: #4299e1; /* blue-500 */\
+            color: white;\
+            padding: 0.75rem 1rem;\
+            border-radius: 4px;\
+            border: none;\
+            cursor: pointer;\
+            transition: background-color 0.2s;\
+            margin-left: 0.5rem;\
+          \}\
+          .console-send-button:hover:not(:disabled) \{\
+            background-color: #3182ce; /* blue-600 */\
+          \}\
+          .console-send-button:disabled \{\
+            opacity: 0.5;\
+            cursor: not-allowed;\
+          \}\
+          .user-line \{\
+            color: #63b3ed; /* blue-300 */\
+          \}\
+          .eva-line \{\
+            color: #81e6d9; /* teal-300 */\
+          \}\
+          .loading-line \{\
+            color: #f6e05e; /* yellow-300 */\
+            font-style: italic;\
+          \}\
+          .console-prompt \{\
+            color: #e2e8f0; /* gray-200 */\
+            margin-right: 0.5rem;\
+          \}\
+        `\}\
+      </style>\
+\
+      <div className="console-container">\
+        <div className="console-output" ref=\{outputRef\}>\
+          \{consoleOutput.map((line, index) => (\
+            <div key=\{index\} className=\{`$\{line.sender\}-line`\}>\
+              \{line.sender === 'user' ? (\
+                <span className="console-prompt">Voc\'ea &gt;</span>\
+              ) : line.sender === 'eva' ? (\
+                <span className="console-prompt">Eva &gt;</span>\
+              ) : (\
+                <span className="console-prompt">Sistema &gt;</span>\
+              )\}\
+              \{line.text\}\
+            </div>\
+          ))\}\
+        </div>\
+        <div className="console-input-area">\
+          <span className="console-prompt">Comando &gt;</span>\
+          <input\
+            type="text"\
+            className="console-input"\
+            value=\{inputText\}\
+            onChange=\{(e) => setInputText(e.target.value)\}\
+            onKeyPress=\{handleKeyPress\}\
+            disabled=\{isLoading\}\
+            autoFocus\
+          />\
+          <button\
+            className="console-send-button"\
+            onClick=\{handleCommand\}\
+            disabled=\{isLoading\}\
+          >\
+            Enviar\
+          </button>\
+        </div>\
+      </div>\
+    </div>\
+  );\
+\};\
+\
+export default App;}
