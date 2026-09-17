@@ -2,6 +2,7 @@
 """Gera Athena_Business_Package.html — app self-contained: capta info + gera o pacote."""
 import base64
 logo = base64.b64encode(open("athena_logo.png","rb").read()).decode()
+stockimg = base64.b64encode(open("athena_stock_bg.png","rb").read()).decode()
 
 HTML = r"""<!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8">
@@ -63,6 +64,10 @@ body{font-family:Calibri,'Segoe UI',Arial,sans-serif;color:var(--ink);margin:0;b
 .doc .stockcert h1{color:#2f5aa8;font-family:Georgia,serif}
 .doc .stocknum,.doc .stockint{position:absolute;top:16px;font-size:8.5px;text-align:center;color:#2f5aa8;font-weight:bold;border:1px solid #2f5aa8;padding:3px 10px;border-radius:3px}
 .doc .stocknum{left:26px}.doc .stockint{right:26px}
+.doc .stockwrap{position:relative;width:100%;max-width:760px;margin:4px auto}
+.doc .stockwrap img{width:100%;display:block}
+.doc .sfield{position:absolute;transform:translate(-50%,-50%);text-align:center;font-family:Georgia,serif;color:#10233f;white-space:nowrap;line-height:1}
+.doc .sfieldL{position:absolute;transform:translateY(-50%);font-family:Georgia,serif;color:#10233f;white-space:nowrap;line-height:1}
 .doc .crev th{background:#eef1f5;color:var(--slate)}
 .doc .decl{border:1px solid var(--line);background:#fafbfc;border-radius:6px;padding:12px;margin-top:12px}
 .doc .decl .cb{display:inline-block;width:14px;height:14px;border:1px solid #444;text-align:center;line-height:14px;font-weight:bold;margin-right:6px}
@@ -182,6 +187,7 @@ body{font-family:Calibri,'Segoe UI',Arial,sans-serif;color:var(--ink);margin:0;b
 
 <script>
 var LOGO="data:image/png;base64,__LOGO__";
+var STOCKIMG="data:image/png;base64,__STOCKIMG__";
 var SOCIO_FIELDS=[["POSICAO","Posição","c3"],["PERCENT","% Particip.","c1"],["APORTE","Aporte US$","c2"],["VOTO","Voto % (se ≠)","c2"],["NOME","Nome completo","c4"],
   ["SSN","SSN/ITIN/EIN","c3"],["DOB","Nascimento","c3"],["ENDERECO","Endereço","c4"],
   ["CIDADE","Cidade","c2"],["ESTADO","UF","c1"],["CEP","CEP","c2"],["TELEFONE","Telefone","c3"],["EMAIL","E-mail","c3"]];
@@ -444,17 +450,26 @@ function docMailbox(d,soc){
    '<p style="margin-top:14px"><b>Assinatura:</b> __________________________ &nbsp; <b>Data:</b> ____/____/______</p>'+foot(d)+'</div>';
 }
 
+var MONTHS=["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
+function ord(n){n=parseInt(n,10);var s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function dateParts(str){
+  var m=String(str||"").match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if(m){var mo=parseInt(m[1],10),da=parseInt(m[2],10),yr=m[3];return {day:ord(da),month:(MONTHS[mo-1]||""),year:String(yr).slice(-2)};}
+  return {day:"",month:"",year:""};
+}
 function docStock(d,soc){
   return soc.map(function(s,i){
+    var dp=dateParts(d.ABERTURA_DATA);
     return '<div class="doc">'+lh(d)+
-     '<div class="stockcert">'+
-     '<div class="stocknum">NUMBER<br>0'+(i+1)+'</div>'+
-     '<div class="stockint">INTEREST<br>'+esc(s.PERCENT)+'%</div>'+
-     '<h1 class="ctr" style="margin-top:6px">'+esc(d.LLC_NAME)+'</h1>'+
-     '<p class="ctr" style="font-size:9px;color:#6B7785;letter-spacing:1px">A '+esc(d.STATE)+' LIMITED LIABILITY COMPANY · INTEREST CERTIFICATE</p>'+
-     '<p style="margin-top:22px">This Certifies That <b>'+esc(s.NOME)+'</b> is the owner of <b>'+words(s.PERCENT)+' PERCENT ('+esc(s.PERCENT)+'%)</b> Interest of the above named Limited Liability Company transferable only on the books of the Company by the holder hereof in person or by duly authorized Attorney upon surrender of this Certificate properly endorsed. The transfer of the Interest in this Limited Liability Company is subject to restrictions set forth in the Limited Liability Company Operating Agreement and the transfer of the related ownership rights may be effected only upon the unanimous consent of members or compliance with any procedure provided in the Operating Agreement.</p>'+
-     '<p>In Witness Whereof, the said Limited Liability Company has caused this Certificate to be executed on its behalf by its duly authorized manager(s), member(s), officer(s) or agent(s), this '+esc(d.ABERTURA_DATA)+'.</p>'+
-     '<div style="margin-top:30px;text-align:center">______________________________________<br><span style="font-size:9px;color:#6B7785">Authorized Member / Officer</span></div>'+
+     '<div class="stockwrap"><img src="'+STOCKIMG+'" alt="Interest Certificate">'+
+     '<span class="sfield" style="left:22.6%;top:29.2%;font-size:15px;font-weight:bold">0'+(i+1)+'</span>'+
+     '<span class="sfield" style="left:75.4%;top:29.2%;font-size:14px;font-weight:bold">'+esc(s.PERCENT)+'%</span>'+
+     '<span class="sfield" style="left:50%;top:41.5%;font-size:21px;font-weight:bold;letter-spacing:1px;color:#16305c">'+esc(d.LLC_NAME)+'</span>'+
+     '<span class="sfieldL" style="left:29%;top:50.6%;font-size:15px">'+esc(s.NOME)+'</span>'+
+     '<span class="sfield" style="left:47%;top:55.4%;font-size:13px">'+words(s.PERCENT)+' PERCENT</span>'+
+     '<span class="sfield" style="left:25%;top:86.4%;font-size:12px">'+esc(dp.day)+'</span>'+
+     '<span class="sfield" style="left:63%;top:86.4%;font-size:12px">'+esc(dp.month)+'</span>'+
+     '<span class="sfield" style="left:90.5%;top:86.4%;font-size:12px">'+esc(dp.year)+'</span>'+
      '</div>'+foot(d)+'</div>';
   }).join("");
 }
@@ -520,5 +535,5 @@ socios:[
 </script>
 </body></html>"""
 
-open("Athena_Business_Package.html","w",encoding="utf-8").write(HTML.replace("__LOGO__",logo))
+open("Athena_Business_Package.html","w",encoding="utf-8").write(HTML.replace("__LOGO__",logo).replace("__STOCKIMG__",stockimg))
 print("Saved Athena_Business_Package.html", len(HTML))
